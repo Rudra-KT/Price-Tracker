@@ -18,9 +18,6 @@
 ---
 
 ## 📂 Project Structure
-# PriceTracker
-
-## Project Structure
 
 ```plaintext
 priceTracker_2/
