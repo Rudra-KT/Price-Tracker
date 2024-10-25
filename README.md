@@ -84,11 +84,64 @@ source .venv/bin/activate  # For Linux/macOS
 pip install -r requirements.txt
 ``
 
-## Set up the MySQL database and tables 
+## 🗃️ Database Setup
 
+To set up the MySQL database and tables for this project, follow these steps:
 
+1. Open your MySQL client or command-line interface.
+2. Connect to your MySQL server.
+3. Run the following SQL commands:
 
-📬 Notifications Setup
+```sql
+-- Drop existing tables if they exist to avoid conflicts
+DROP TABLE IF EXISTS `price_history`;
+DROP TABLE IF EXISTS `user_products`;
+DROP TABLE IF EXISTS `users`;
+
+-- Create `users` table
+CREATE TABLE `users` (
+  `user_id` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(255) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 
+  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create `user_products` table
+CREATE TABLE `user_products` (
+  `product_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `product_name` VARCHAR(255) NOT NULL,
+  `product_url` TEXT NOT NULL,
+  `desired_price` DECIMAL(10,2) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`product_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_products_ibfk_1` 
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) 
+    ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=11 
+  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create `price_history` table
+CREATE TABLE `price_history` (
+  `history_id` INT NOT NULL AUTO_INCREMENT,
+  `product_id` INT NOT NULL,
+  `recorded_price` DECIMAL(10,2) NOT NULL,
+  `recorded_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`history_id`),
+  KEY `product_id` (`product_id`),
+  CONSTRAINT `price_history_ibfk_1` 
+    FOREIGN KEY (`product_id`) REFERENCES `user_products` (`product_id`) 
+    ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=445 
+  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+```
+
+## 📬 Notifications Setup
 ```
 Add your email credentials in credentials.json:
 {
@@ -96,7 +149,7 @@ Add your email credentials in credentials.json:
   "password": "your-email-password"
 }
 ```
-- **Ensure that less secure apps are enabled for the email provider (e.g., Gmail)**
+- **Ensure that less secure apps are enabled for the email provider (e.g., Gmail)** otherwise you wont be able to send mails to users .
 
 ## 💡 Usage Instructions
 
@@ -107,5 +160,6 @@ Add your email credentials in credentials.json:
 
 ## 🐛 Known Issues
 
-- **Blocked scraping requests:** Some e-commerce websites may block scraping. Use a proxy server if needed.
-- **Captcha on Amazon:** Implement headless browser solutions if frequent captchas are encountered.
+- **Blocked scraping requests:** Some e-commerce websites may block scraping (in particular when deploying via pythonanywhere) . Use a proxy server if needed (didnt try a paid proxy , free proxies didnt work in my case tho 😥). (altho it works perfectly on local deployment)
+  
+- **Captcha on Amazon:** Implement headless browser solutions if frequent captchas are encountered. (using selenium) (this too didnt work for me when i deployed through pythonanywhere 😥)
