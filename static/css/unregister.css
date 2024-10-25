@@ -1,0 +1,168 @@
+:root {
+    --primary-color: #3B1E54;
+    --secondary-color: #9B7EBD;
+    --accent-color: #D4BEE4;
+    --background-color: #EEEEEE;
+    --text-color: #333;
+    --error-color: #ff4757;
+    --heading-font: 'Poppins', sans-serif;
+    --body-font: "Oxanium", sans-serif;
+}
+
+body {
+    font-family: var(--body-font);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.unregister-container {
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+h2 {
+    font-family: var(--heading-font);
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.btn {
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-danger {
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.btn-danger:hover {
+    background-color: #ff3747;
+    border-color: #ff3747;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.message-container {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.message-container h2 {
+    color: #fff;
+}
+
+.home-button {
+    margin-top: 10px;
+    background-color: #9B7EBD;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.home-button:hover {
+    background-color: #805CB6;
+    transform: scale(1.05);
+}
+
+.home-button:active {
+    transform: scale(0.95);
+}
+
+.card-body p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 767.98px) {
+    body {
+        padding: 10px;
+    }
+
+    .unregister-container {
+        padding: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 0.4rem 1.2rem;
+        font-size: 0.8rem;
+    }
+
+    .buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-danger, .btn-secondary {
+        width: 100%;
+    }
+
+    .text-md-right {
+        text-align: left !important;
+    }
+}
+
+@media (max-width: 375px) {
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    p {
+        font-size: 0.85rem;
+    }
+
+    .btn {
+        padding: 0.3rem 1rem;
+        font-size: 0.75rem;
+    }
+}

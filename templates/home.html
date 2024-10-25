@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Price Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="static/css/home.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Price Tracker</h1>
+            <p>Track product prices effortlessly and never miss a deal. Join us today and start saving!</p>
+            <div class="buttons">
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+            </div>
+        </div>
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-chart-line"></i>
+                <h3>Real-time Tracking</h3>
+                <p>Monitor prices as they change</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-bell"></i>
+                <h3>Instant Alerts</h3>
+                <p>Get notified when prices drop</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Multiple Stores</h3>
+                <p>Track across various retailers</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

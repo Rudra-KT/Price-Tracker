@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unregister Account | Price Tracker</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Oxanium:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/unregister.css">
+</head>
+<body>
+    <div class="unregister-container" id="unregister-content">
+        <h2><i class="fas fa-user-minus mr-2"></i>Unregister Account</h2>
+        <p>Are you sure you want to unregister? This action cannot be undone.</p>
+        <div class="buttons">
+            <button id="unregister-btn" class="btn btn-danger">
+                <i class="fas fa-trash-alt mr-2"></i>Delete account
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Cancel
+            </a>
+        </div>
+    </div>
+
+    <div class="message-container" id="message-container">
+        <h2>Account successfully unregistered!</h2>
+        <button class="btn home-button" onclick="goHome()">
+            <i class="fas fa-home mr-2"></i>Go to Home Page
+        </button>
+    </div>
+
+    <script>
+        document.getElementById('unregister-btn').addEventListener('click', async function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            try {
+                // Send the unregister request to the server
+                const response = await fetch('/unregister', { method: 'POST' });
+
+                if (response.ok) {
+                    // Hide the original content and show the success message
+                    document.getElementById('unregister-content').style.display = 'none';
+                    document.getElementById('message-container').style.display = 'block';
+                    document.querySelector('body').style.background = 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))';
+                } else {
+                    alert('Failed to unregister. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        function goHome() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
