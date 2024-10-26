@@ -31,6 +31,12 @@
         </button>
     </div>
 
+    {% if console_log %}
+        <script>
+            console.log("{{ console_log }}");
+        </script>
+    {% endif %}
+
     <script>
         document.getElementById('unregister-btn').addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent form submission

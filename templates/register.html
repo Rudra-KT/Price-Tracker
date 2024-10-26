@@ -16,10 +16,16 @@
             <h2>Create Account</h2>
             <p>Join our community today</p>
         </div>
-        <form method="POST" class="register-form" id="register-form">
+
+        <!-- Display error message -->
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" class="register-form" id="register-form" action="/register">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" value="{{ email }}" required>
                 <i class="fas fa-envelope"></i>
             </div>
             <div class="form-group">
@@ -31,7 +37,7 @@
                 <label for="confirm-password">Confirm Password</label>
                 <input type="password" id="confirm-password" name="confirm-password" required>
                 <i class="fas fa-lock"></i>
-                <div class="error-message" id="password-error">Passwords do not match</div>
+                <div class="password-error" id="password-error">Passwords do not match</div>
             </div>
             <button type="submit" class="register-btn">Register</button>
         </form>

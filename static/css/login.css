@@ -13,6 +13,19 @@
     box-sizing: border-box;
 }
 
+.flash-message {
+    padding: 10px;
+    margin: 10px 0;
+}
+.flash-message.success {
+    background-color: #d4edda; /* Light green background */
+    color: #155724; /* Dark green text */
+}
+.flash-message.error {
+    background-color: #f8d7da; /* Light red background */
+    color: #721c24; /* Dark red text */
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));

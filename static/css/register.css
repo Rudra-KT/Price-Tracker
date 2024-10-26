@@ -119,3 +119,20 @@ body {
 .login-link a:hover {
     text-decoration: underline;
 }
+
+/* error when passwords dont match */
+.password-error {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
+/* error when user already exists */
+.error-message {
+    color: var(--error-color);
+    font-size: 14px;
+    margin: 10px 0;
+    background-color: #ffe6e6;
+    padding: 10px;
+
+
+}

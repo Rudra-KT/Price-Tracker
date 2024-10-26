@@ -1,3 +1,6 @@
+# database.py
+from datetime import datetime
+
 import MySQLdb
 from flask import current_app as app
 import logging
@@ -28,7 +31,7 @@ def get_products():
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            SELECT u.email, p.product_id, p.product_name, p.product_url, p.desired_price 
+            SELECT u.email, p.product_id, p.product_name, p.product_url, p.desired_price , p.product_type , p.last_notified , p.last_emailed_price
             FROM users u JOIN user_products p ON u.user_id = p.user_id
         """)
         products = cursor.fetchall()
@@ -40,42 +43,42 @@ def get_products():
     finally:
         conn.close()
 
-def get_last_price(product_id):
+def get_last_price(product_type):
     """Get the last recorded price for a product."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT recorded_price FROM price_history WHERE product_id = %s ORDER BY recorded_at DESC LIMIT 1", (product_id,))
+        cursor.execute("SELECT recorded_price FROM price_history WHERE product_type = %s ORDER BY recorded_at DESC LIMIT 1", (product_type,))
         result = cursor.fetchone()
-        logging.debug(f"Last recorded price for product {product_id}: {result}")
+        logging.debug(f"Last recorded price for product type {product_type}: {result}")
         return result['recorded_price'] if result else None
     except MySQLdb.Error as e:
-        logging.error(f"Error fetching last price for product {product_id}: {e}")
+        logging.error(f"Error fetching last price for product type {product_type}: {e}")
         return None
     finally:
         conn.close()
 
-def insert_price(product_id, price):
+def insert_price(price , product_type):
     """Insert new price into price history."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO price_history (product_id, recorded_price) VALUES (%s, %s)", (product_id, price))
+        cursor.execute("INSERT INTO price_history (recorded_price, product_type) VALUES (%s, %s)", (price, product_type))
         conn.commit()
-        logging.debug(f"Inserted price {price} for product {product_id}")
+        logging.debug(f"Inserted price {price} for product {product_type}")
     except MySQLdb.Error as e:
-        logging.error(f"Error inserting price for product {product_id}: {e}")
+        logging.error(f"Error inserting price for product {product_type}: {e}")
     finally:
         conn.close()
 
-def get_price_history(product_id):
+def get_price_history(product_type):
     """Fetch price history for a specific product."""
     conn = get_db_connection()
     cursor = conn.cursor(MySQLdb.cursors.DictCursor)  # Use DictCursor for dictionary-like results
     try:
         # Query to get the price history for the specified product_id
-        query = "SELECT recorded_price, recorded_at FROM price_history WHERE product_id = %s ORDER BY recorded_at DESC"
-        cursor.execute(query, (product_id,))
+        query = "SELECT recorded_price, recorded_at FROM price_history WHERE product_type = %s ORDER BY recorded_at DESC"
+        cursor.execute(query, (product_type,))
 
         # Fetch all the results
         price_history = cursor.fetchall()
@@ -101,3 +104,19 @@ def delete_user(user_id):
     # Now delete the user
     cursor.execute('DELETE FROM users WHERE user_id = %s', (user_id,))
     conn.commit()
+
+
+def update_last_notified(product_type, current_price):
+    """Update the last notified timestamp and last emailed price for a product."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = """
+            UPDATE user_products
+            SET last_notified = %s, last_emailed_price = %s
+            WHERE product_type = %s
+            """
+            cursor.execute(sql, (datetime.now(), current_price, product_type))
+            conn.commit()
+    finally:
+        conn.close()

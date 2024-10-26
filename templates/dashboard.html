@@ -61,7 +61,7 @@
                                 <td data-label="Desired Price" class="price-column">₹{{ product.desired_price }}</td>
                                 <td data-label="Actions">
                                     <div class="action-buttons">
-                                        <a href="{{ url_for('view_price_history', productId=product.product_id) }}" class="btn btn-info btn-sm">
+                                        <a href="{{ url_for('view_price_history', product_type=product.product_type) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-chart-line"></i> History
                                         </a>
                                         <form method="POST" action="{{ url_for('unregister_product', product_id=product.product_id) }}" class="d-inline">
@@ -90,7 +90,19 @@
         <div class="card-header">
             <h3 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>Add New Product</h3>
         </div>
+
         <div class="card-body">
+            <!-- Flash Messages Section -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes" style="list-style-type: none; padding-left:0px;">
+                        {% for category, message in messages %}
+                            <li class="alert {{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
             <form method="POST" action="{{ url_for('add_product') }}">
                 <div class="form-row">
                     <div class="col-md-4 mb-3">
@@ -116,11 +128,20 @@
             <div class="card-header">
                 <h3 class="mb-0"><i class="fas fa-user-cog mr-2"></i>Account Management</h3>
             </div>
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <p class="mb-0">Permanently delete your account and all associated data.</p>
-                <a href="{{ url_for('unregister') }}" class="btn btn-danger">
-                    <i class="fas fa-user-slash mr-1"></i>Unregister Account
-                </a>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="mb-0">Change your account password</p>
+                    <a href="{{ url_for('change_password') }}" class="btn btn-primary">
+                        <i class="fas fa-lock mr-1"></i> Change Password
+                    </a>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="mb-0">Permanently delete your account and all associated data</p>
+                    <a href="{{ url_for('unregister') }}" class="btn btn-danger">
+                        <i class="fas fa-user-slash mr-1"></i>Unregister Account
+                    </a>
+                </div>
             </div>
         </div>
 
