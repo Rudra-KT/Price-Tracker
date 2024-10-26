@@ -93,51 +93,42 @@ To set up the MySQL database and tables for this project, follow these steps:
 3. Run the following SQL commands:
 
 ```sql
--- Drop existing tables if they exist to avoid conflicts
-DROP TABLE IF EXISTS `price_history`;
-DROP TABLE IF EXISTS `user_products`;
-DROP TABLE IF EXISTS `users`;
-
--- Create `users` table
+-- -- Create the `users` table
 CREATE TABLE `users` (
-  `user_id` INT NOT NULL AUTO_INCREMENT,
-  `email` VARCHAR(255) NOT NULL,
-  `password_hash` VARCHAR(255) NOT NULL,
-  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create `user_products` table
+-- Create the `user_products` table
 CREATE TABLE `user_products` (
-  `product_id` INT NOT NULL AUTO_INCREMENT,
-  `user_id` INT NOT NULL,
-  `product_name` VARCHAR(255) NOT NULL,
-  `product_url` TEXT NOT NULL,
-  `desired_price` DECIMAL(10,2) NOT NULL,
-  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `product_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `product_url` text NOT NULL,
+  `desired_price` decimal(10,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `product_type` int NOT NULL DEFAULT '0',
+  `asin` varchar(16) DEFAULT NULL,
+  `last_notified` datetime DEFAULT NULL,
+  `last_emailed_price` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`product_id`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `user_products_ibfk_1` 
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) 
-    ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `user_products_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create `price_history` table
+-- Create the `price_history` table
 CREATE TABLE `price_history` (
-  `history_id` INT NOT NULL AUTO_INCREMENT,
-  `product_id` INT NOT NULL,
-  `recorded_price` DECIMAL(10,2) NOT NULL,
-  `recorded_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`history_id`),
-  KEY `product_id` (`product_id`),
-  CONSTRAINT `price_history_ibfk_1` 
-    FOREIGN KEY (`product_id`) REFERENCES `user_products` (`product_id`) 
-    ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=445 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `history_id` int NOT NULL AUTO_INCREMENT,
+  `recorded_price` decimal(10,2) NOT NULL,
+  `recorded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `product_type` int NOT NULL,
+  PRIMARY KEY (`history_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=920 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 ```
 
