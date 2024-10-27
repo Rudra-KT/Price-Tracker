@@ -218,14 +218,6 @@ def add_product():
         cursor.execute('SELECT COALESCE(MAX(product_type), 0) + 1 AS new_product_type FROM user_products')
         product_type = cursor.fetchone()['new_product_type']
 
-    # Scrape the current price
-    current_price = scrape_price(product_url)
-
-    if current_price is None:
-        flash('Unable to retrieve the product price. Please try again later.', 'error')
-        cursor.close()
-        return redirect(url_for('dashboard'))
-
     # Insert the product into user_products table
     cursor.execute(
         '''
@@ -236,6 +228,14 @@ def add_product():
         (current_user.id, product_name, product_url, desired_price, product_type, product_asin)
     )
     mysql.connection.commit()
+
+    # Scrape the current price
+    current_price = scrape_price(product_url)
+
+    if current_price is None:
+        flash('Unable to retrieve the product price. Please try again later.', 'error')
+        cursor.close()
+        return redirect(url_for('dashboard'))
 
     # Save the price history
     cursor.execute(
