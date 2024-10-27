@@ -11,6 +11,10 @@ import re
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 HEADERS = {
+    "Accept-language": "en-GB,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Cache-Control": "max-age=0",
+    "Connection": "keep-alive",
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/114.0.5735.110 Safari/537.36"
@@ -73,9 +77,13 @@ def scrape_price_flipkart(url):
 def scrape_price(url):
     """Determine whether the product is from Amazon or Flipkart and scrape price."""
     if "amazon" in url or "amzn" in url:  # Handle both full and shortened Amazon URLs
-        return scrape_price_amazon(url)
+        response = requests.get(url)
+        print("url is ",response.url)
+        return scrape_price_amazon(response.url)
     elif "flipkart" in url:
-        return scrape_price_flipkart(url)
+        response = requests.get(url)
+        final_url = response.url  # This is the full URL after redirection
+        return scrape_price_flipkart(final_url)
     else:
         logging.error(f"Unsupported website for URL: {url}")
         return None
@@ -121,7 +129,7 @@ def create_price_alert_email(product_name, current_price, desired_price, product
         product_url = base_url
 
     email_body = f"""
-    Hello Price Tracker User! 👋
+    Hello Price Hawk 🦅 User! 👋
     
     🎉 GREAT NEWS! We've detected a price drop on your watched item!
     
@@ -145,7 +153,7 @@ def create_price_alert_email(product_name, current_price, desired_price, product
     🔔 We'll keep monitoring prices for you
     
     Happy Shopping! 🛒
-    Your Price Tracker Team
+    The Price Hawk Team! 🦅
     
     Note: This is an automated alert. Prices and availability are subject to change.
     """
