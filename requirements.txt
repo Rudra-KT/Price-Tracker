@@ -7,7 +7,8 @@ requests == 2.32.0
 validators == 0.18.1
 
 html5lib == 1.1
-
+flask_mysqldb == 2.0.0
+mysqlclient == 2.2.5
 mysql-connector-python~=9.1.0
 Flask~=3.0.3
 schedule~=1.2.2
