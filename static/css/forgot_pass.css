@@ -114,10 +114,11 @@ h2::after {
 
 .form-group label {
     color: var(--primary-color);
-    font-weight: 500;
+    font-family: var(--heading-font);
+    font-weight: 700;
     margin-bottom: 0.8rem;
     display: block;
-    font-size: 0.9rem;
+    font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding-left: 3px;
@@ -170,6 +171,7 @@ input[type="text"]:focus {
 .back-to-login {
     text-align: center;
     margin-top: 1.5rem;
+    font-family: var(--heading-font);
 }
 
 .back-to-login a {
