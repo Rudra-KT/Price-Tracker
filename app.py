@@ -253,17 +253,18 @@ def add_product():
             (user_id,)
         )
         existing_user = cursor.fetchone()
-        if curr_price<desired_price :
-            send_email(
-                existing_user['email'],
-                *create_price_alert_email(
-                    product_name,
-                    curr_price,
-                    desired_price,
-                    product_url
+        if curr_price is not None:
+            if curr_price<desired_price :
+                send_email(
+                    existing_user['email'],
+                    *create_price_alert_email(
+                        product_name,
+                        curr_price,
+                        desired_price,
+                        product_url
+                    )
                 )
-            )
-        update_last_notified(product_type, current_price)
+                update_last_notified(product_type, current_price)
     cursor.close()
     return redirect(url_for('dashboard'))
 
