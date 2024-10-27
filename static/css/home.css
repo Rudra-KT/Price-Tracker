@@ -10,7 +10,7 @@ body, html {
     padding: 0;
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    height: 100%;
+    height:100%;
     color: var(--background-color);
 }
 
@@ -20,7 +20,6 @@ body, html {
     justify-content: center;
     align-items: center;
     height: 100%;
-    padding: 2rem;
 }
 
 .content {
@@ -43,7 +42,7 @@ p {
 .buttons {
     display: flex;
     gap: 1rem;
-    justify-content: center
+    justify-content: center;
 }
 
 .btn {
@@ -55,6 +54,7 @@ p {
     text-decoration: none;
     transition: all 0.3s ease;
     cursor: pointer;
+    width: 10%;
 }
 
 .btn-primary {
@@ -90,8 +90,45 @@ p {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     color: var(--accent-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    animation: float 3s ease-in-out infinite;
 }
 
+.feature:hover i {
+    transform: scale(1.2);
+    color: var(--background-color);
+    text-shadow: 0 0 15px var(--accent-color);
+}
+.feature i:active {
+    transform: scale(0.95);
+}
+
+/* Floating animation */
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* Different animation delay for each feature to create a wave effect */
+.feature:nth-child(1) i {
+    animation-delay: 0s;
+}
+
+.feature:nth-child(2) i {
+    animation-delay: 0.2s;
+}
+
+.feature:nth-child(3) i {
+    animation-delay: 0.4s;
+}
 .feature h3 {
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
@@ -100,4 +137,64 @@ p {
 .feature p {
     font-size: 0.9rem;
     opacity: 0.8;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    body{
+        height:max-content;
+    }
+
+    .container {
+        padding: 1.6rem;
+        padding-top: 3.5rem;
+        padding-bottom: 3.5rem;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+
+    .buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .btn {
+        width: 70%;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .features {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 2rem;
+    }
+
+    .feature {
+        width: 84%;
+    }
+
+    .feature i {
+        font-size: 2rem;
+        animation: float 2s ease-in-out infinite;
+    }
+
+    .feature h3 {
+        font-size: 1.1rem;
+    }
+
+    .feature p {
+        font-size: 0.8rem;
+    }
+
+    .feature:hover i {
+        transform: scale(1.1);
+    }
 }

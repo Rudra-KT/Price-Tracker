@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask
 
-from database import get_products, get_last_price, insert_price, update_last_notified, get_db_connection
+from database import get_products, get_last_price, insert_price, update_last_notified
 from notifier import send_email
 import logging
 import re
@@ -147,3 +146,4 @@ def track_prices():
                     print("Notification not sent due to time constraints.")
         else:
             logging.warning(f"Failed to retrieve price for {product['product_name']}")
+

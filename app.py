@@ -1,6 +1,6 @@
-from datetime import datetime
+import os
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, get_flashed_messages
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -14,10 +14,23 @@ import logging
 from database import get_price_history, delete_user
 from decimal import Decimal
 
+from secrets import token_urlsafe
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+
+# Constants for forget pass reset
+RESET_TOKEN_LENGTH = 32
+TOKEN_EXPIRY_HOURS = 12
+MAX_RESET_ATTEMPTS = 5
+MIN_PASSWORD_LENGTH = 7
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
+
 
 # MySQL configurations
 app.config['MYSQL_HOST'] = 'localhost'
@@ -331,7 +344,7 @@ def change_password():
 
         if not user_email:
             flash('You need to be logged in to change your password.', 'error')
-            return redirect(url_for('login'))  # Redirect to login if not logged in
+            return redirect(url_for('login'))  # Redirect to log in if not logged in
 
         # Check the current password
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -339,35 +352,271 @@ def change_password():
         user = cursor.fetchone()
 
         if user and bcrypt.check_password_hash(user['password_hash'], current_password):
-            if new_password == confirm_new_password:
+            if not bcrypt.check_password_hash(user['password_hash'], new_password):
+                if not validate_password(new_password,confirm_new_password):
+                    return render_template('change_password.html')
                 # Hash the new password and update it in the database
                 new_password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
                 cursor.execute('UPDATE users SET password_hash = %s WHERE email = %s', (new_password_hash, user_email))
                 mysql.connection.commit()
 
-                # Capture the current date and time
-                change_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-                # Email content with formatted change date and time
-                email_subject = "Password Change Notification"
-                email_body = (
-                    f"Your password has been changed successfully ✅ .\n\n"
-                    f"Account Details:\n"
-                    f"Email: {user_email}\n"
-                    f"Date of Change: {change_time}\n"
-                )
-
                 # Send password change notification email
-                send_email(user_email, email_subject, email_body)
+                send_password_change_notification(user_email)
 
                 flash('Your password has been changed successfully!', 'success')
                 return render_template('change_password.html')  # Render the same template with the success message
             else:
-                flash('New passwords do not match. Please try again.', 'error')
+                flash('Please choose a new password', 'error')
+
         else:
             flash('Current password is incorrect. Please try again.', 'error')
 
     return render_template('change_password.html')
+
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email', '')
+
+        if not email:
+            flash('Please enter your email address.', 'error')
+            return render_template('forgot_password.html')
+
+        if is_rate_limited(email):
+            flash('Too many requests. Please try again later.', 'error')
+            return render_template('forgot_password.html')
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        try:
+            cursor.execute('SELECT user_id, email FROM users WHERE email = %s', (email,))
+            user = cursor.fetchone()
+
+            if not user:
+                flash('If an account exists with this email, you will receive reset instructions.', 'info')
+                return render_template('forgot_password.html')
+
+            # Generate secure reset token
+            reset_token = token_urlsafe(RESET_TOKEN_LENGTH)
+            expiry = datetime.now(timezone.utc)  + timedelta(hours=TOKEN_EXPIRY_HOURS)
+
+            # Invalidate any existing unused tokens for this user
+            cursor.execute('''
+                    UPDATE password_resets 
+                    SET used = TRUE 
+                    WHERE user_id = %s AND used = FALSE
+                ''', (user['user_id'],))
+
+            # Store new reset token
+            cursor.execute('''
+                    INSERT INTO password_resets 
+                    (user_id, token, expires_at) 
+                    VALUES (%s, %s, %s)
+                ''', (user['user_id'], reset_token, expiry))
+
+            mysql.connection.commit()
+
+            # Generate reset link
+            reset_link = url_for('reset_password', token=reset_token, _external=True)
+            print(reset_link)
+            # Send email
+            send_password_reset_email(email, reset_link)
+
+            flash('If an account exists with this email, you will receive reset instructions.', 'info')
+            return render_template('forgot_password.html')
+
+        except Exception as e:
+            mysql.connection.rollback()
+            app.logger.error(f"Password reset error: {str(e)}")
+            flash('An error occurred. Please try again later.', 'error')
+            return render_template('forgot_password.html')
+
+        finally:
+            cursor.close()
+
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if not token:
+        flash('Invalid reset link.', 'error')
+        return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    try:
+        # Verify token and check expiry
+        cursor.execute('''
+                    SELECT pr.*, u.email, u.user_id , u.password_hash
+                    FROM password_resets pr 
+                    JOIN users u ON pr.user_id = u.user_id 
+                    WHERE pr.token = %s AND pr.used = FALSE AND pr.expires_at > %s
+                    ORDER BY pr.created_at DESC LIMIT 1
+                ''', (token, datetime.now(timezone.utc)))
+
+        reset_info = cursor.fetchone()
+
+        if not reset_info:
+            flash('Invalid or expired reset link. Please request a new one.', 'error')
+            return redirect(url_for('forgot_password'))
+
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+
+            # Validate password
+            if not bcrypt.check_password_hash(reset_info['password_hash'], new_password):
+                if not validate_password(new_password, confirm_password):
+                    return render_template('reset_password.html', token=token)
+
+                # Update password and mark token as used
+                hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+
+                cursor.execute('''
+                            UPDATE users 
+                            SET password_hash = %s
+                            WHERE user_id = %s
+                        ''', (hashed_password, reset_info['user_id']))
+
+                cursor.execute('''
+                            UPDATE password_resets 
+                            SET used = TRUE,
+                                used_at = %s 
+                            WHERE token = %s
+                        ''', (datetime.now(timezone.utc), token))
+
+                mysql.connection.commit()
+
+                # Send notification email
+                send_password_change_notification(reset_info['email'])
+
+                flash('Password reset successful! Please log in with your new password.', 'success')
+                # return redirect(url_for('login'))
+            else:
+                flash('Please choose a new password', 'error')
+
+        return render_template('reset_password.html', token=token)
+
+    except Exception as e:
+        mysql.connection.rollback()
+        app.logger.error(f"Password reset error: {str(e)}")
+        flash('An error occurred. Please try again later.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    finally:
+        cursor.close()
+
+
+def is_rate_limited(email):
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Clean up old attempts (older than 1 hour)
+        cursor.execute('''
+            DELETE FROM password_reset_attempts 
+            WHERE attempt_time < NOW() - INTERVAL 1 HOUR
+        ''')
+
+        # Count recent attempts
+        cursor.execute('''
+            SELECT COUNT(*) as attempt_count 
+            FROM password_reset_attempts 
+            WHERE email = %s 
+            AND attempt_time > NOW() - INTERVAL 1 HOUR
+        ''', (email,))
+
+        result = cursor.fetchone()
+        attempt_count = result['attempt_count']
+
+        if attempt_count >= MAX_RESET_ATTEMPTS:
+            return True
+
+        # Record this attempt
+        cursor.execute('''
+            INSERT INTO password_reset_attempts (email, attempt_time)
+            VALUES (%s, NOW())
+        ''', (email,))
+
+        mysql.connection.commit()
+        return False
+
+    except Exception as e:
+        app.logger.error(f"Rate limiting error: {str(e)}")
+        return False
+
+    finally:
+        cursor.close()
+
+
+def validate_password(password, confirm_password):
+    if not password or not confirm_password:
+        flash('Please fill in all fields.', 'error')
+        return False
+
+    if password != confirm_password:
+        flash('Passwords do not match.', 'error')
+        return False
+
+    if len(password) < MIN_PASSWORD_LENGTH:
+        flash(f'Password must be at least {MIN_PASSWORD_LENGTH} characters long.', 'error')
+        return False
+
+    # Password strength checks
+    if not any(c.isupper() for c in password):
+        flash('Password must contain at least one uppercase letter.', 'error')
+        return False
+
+    if not any(c.islower() for c in password):
+        flash('Password must contain at least one lowercase letter.', 'error')
+        return False
+
+    if not any(c.isdigit() for c in password):
+        flash('Password must contain at least one number.', 'error')
+        return False
+
+    return True
+
+
+def send_password_reset_email(email, reset_link):
+    subject = "Password Reset Request - Price Tracker"
+    body = f"""
+            Hello,
+
+            You recently requested to reset your password. Click the link below to reset it:
+
+            {reset_link}
+
+            This link will expire in {TOKEN_EXPIRY_HOURS} hours.
+
+            If you didn't request this, please ignore this email.
+
+            Best regards,
+            Your Price Tracker Team
+            """
+    send_email(email, subject, body)
+
+
+def send_password_change_notification(email):
+
+    change_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    email_subject = "Your Password Has Been Changed Successfully"
+    email_body = (
+        "Hello,\n\n"
+        "We wanted to let you know that your password has been changed successfully! ✅\n\n"
+        "Here are your account details:\n"
+        f"Email: {email}\n"
+        f"Date of Change: {change_time}\n\n"
+        "If you did not make this change, please contact our support team immediately.\n\n"
+        "Thank you for being a valued member of our community!\n\n"
+        "Best regards,\n"
+        "Your Price Tracker Team"
+    )
+
+    send_email(email, email_subject, email_body)
+
 
 
 if __name__ == '__main__':
