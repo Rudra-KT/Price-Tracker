@@ -42,8 +42,9 @@ def scrape_price_amazon(url):
         logging.debug(f"Fetching Amazon URL: {url}")
         session = requests.Session()  # Use a session to handle redirects
         response = session.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
-        soup = BeautifulSoup(response.content, 'html.parser')
 
+        soup = BeautifulSoup(response.content, 'html.parser')
+        print(soup)
         # Check for Amazon price element
         price_element = soup.select_one("span.a-price-whole")
         if price_element:
