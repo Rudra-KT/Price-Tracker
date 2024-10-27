@@ -1,5 +1,6 @@
 # tracker.py
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -108,6 +109,52 @@ def extract_product_id(url): #for flipkart
 
     return None  # Returns None if no match is found or an error occurs
 
+
+def create_price_alert_email(product_name, current_price, desired_price, product_url):
+    email_subject = f"🔥 PRICE DROP ALERT for {product_name}!"
+
+    if "amazon" in product_url or "amzn" in product_url:
+        base_url = "https://www.amazon.in/dp/"
+        product_asin = get_asin(product_url)
+        product_url = base_url + product_asin
+    elif "flipkart" in product_url or 'fkrt.it' in product_url:
+        # Split the URL at the '?' to remove query parameters
+        base_url = product_url.split('?')[0]
+        product_url = base_url
+
+    email_body = f"""
+    Hello Price Tracker User! 👋
+    
+    🎉 GREAT NEWS! We've detected a price drop on your watched item!
+    
+    📦 Product: {product_name}
+    
+    💰 Price Update:
+       • Desired Price: ₹{desired_price:.2f}
+       • Current Price:  ₹{current_price:.2f}
+    
+    ⚡ This is your chance to grab it at a better price!
+    
+    🛍️ Quick Link to Product:
+    {product_url}
+    
+    ⏰ Don't wait too long! Prices can change quickly on online stores.
+    
+    -------------------
+    Pro Tips:
+    ✨ Keep tracking more products to never miss a deal 
+    📊 Check price history to make informed decisions
+    🔔 We'll keep monitoring prices for you
+    
+    Happy Shopping! 🛒
+    Your Price Tracker Team
+    
+    Note: This is an automated alert. Prices and availability are subject to change.
+    """
+
+    return email_subject, email_body
+
+
 def track_prices():
     """Track prices for all products."""
     products = get_products()  # Fetch products from DB
@@ -119,6 +166,8 @@ def track_prices():
         if current_price is not None:
             last_price = get_last_price(product['product_type'])
             last_emailed_price = product.get('last_emailed_price', float('inf'))  # Default to infinity
+            if last_emailed_price is None:
+                last_emailed_price=float('inf')
 
             insert_price(current_price, product['product_type'])
             logging.info(f"Current price of {product['product_name']}: {current_price} \nLast tracked price of {product['product_name']}: {last_price}")
@@ -133,8 +182,12 @@ def track_prices():
                         print(f"Sending notification for product: {product['product_name']} - Price dropped to ₹{current_price}")
                         send_email(
                             product['email'],
-                            f"Price Drop Alert 🤑‼️ for {product['product_name']} ✨",
-                            f"The price of your registered product has dropped to ₹{current_price}. \nCheck it out right now 👇 ! \n{product['product_url']}"
+                            *create_price_alert_email(
+                                product['product_name'],
+                                current_price,
+                                product['desired_price'],
+                                product['product_url']
+                            )
                         )
                         # Update the last notified timestamp and last emailed price in the database
                         update_last_notified(product['product_type'], current_price)

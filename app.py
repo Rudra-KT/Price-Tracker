@@ -9,7 +9,7 @@ import threading
 import time
 
 from notifier import send_email
-from tracker import track_prices, scrape_price, get_asin, extract_product_id
+from tracker import track_prices, scrape_price, get_asin, extract_product_id, create_price_alert_email
 import logging
 from database import get_price_history, delete_user
 from decimal import Decimal
@@ -214,6 +214,24 @@ def add_product():
             )
             mysql.connection.commit()
             flash('Product added successfully!', 'success')
+
+        curr_price = scrape_price(product_url)
+        user_id = current_user.id
+        cursor.execute(
+            'SELECT email FROM users WHERE user_id = %s',
+            (user_id,)
+        )
+        existing_user = cursor.fetchone()
+        if curr_price<desired_price :
+            send_email(
+                existing_user['email'],
+                *create_price_alert_email(
+                    product_name,
+                    curr_price,
+                    desired_price,
+                    product_url
+                )
+            )
 
     cursor.close()
     return redirect(url_for('dashboard'))
