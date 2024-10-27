@@ -1,0 +1,42 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Environment variables
+.env
+
+# Byte-compiled and log files
+*.log
+*.sqlite3
+*.db
+
+# Pytest and Coverage
+.coverage
+.cache/
+pytest_cache/
+htmlcov/
+
+# Jupyter notebooks checkpoints (if any)
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode and IDE config files (optional)
+.vscode/
+.idea/
+
+# Static asset cache (optional)
+staticfiles/
+node_modules/
+
+# Flask session or upload folders (if applicable)
+instance/
+uploads/

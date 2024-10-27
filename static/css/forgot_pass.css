@@ -1,0 +1,219 @@
+:root {
+    --primary-color: #3B1E54;
+    --secondary-color: #9B7EBD;
+    --accent-color: #D4BEE4;
+    --background-color: #f4f6f8;
+    --text-color: #333;
+    --error-color: #ff4757;
+    --success-color: #2ecc71;
+    --heading-font: 'Poppins', sans-serif;
+    --body-font: "Oxanium", sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--body-font);
+}
+
+.container {
+    max-width: 450px;
+    width: 100%;
+    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+h2 {
+    font-family: var(--heading-font);
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 1.7rem;
+    font-weight: 600;
+    font-size: 1.7rem;
+    position: relative;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: var(--accent-color);
+    border-radius: 2px;
+}
+
+/* Flash Messages Styling */
+.flashes {
+    margin-bottom: 1.5rem;
+    padding: 0;
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.alert i {
+    margin-right: 10px;
+    font-size: 1.1 rem;
+}
+
+.success {
+    color: #2d6a4f;
+    background-color: #d7f3e3;
+    border-left: 4px solid var(--success-color);
+}
+
+.error {
+    color: #c0392b;
+    background-color: #fde8e8;
+    border-left: 4px solid var(--error-color);
+}
+
+.info {
+    color: #805b10;
+    background-color: #fef3c7;
+    border-left: 4px solid #fbbf24;
+}
+
+/* Optional: Add hover effect */
+.alert:hover {
+    transform: translateX(5px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .alert {
+        padding: 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .alert i {
+        font-size: 1rem;
+    }
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.form-group label {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+    display: block;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-left: 3px;
+}
+
+.input-container {
+    position: relative;
+}
+
+input[type="email"],
+input[type="text"] {
+    width: 100%;
+    padding: 0.7rem;
+    border: 2px solid rgba(155, 126, 189, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    box-sizing: border-box;
+}
+
+input[type="email"]:focus,
+input[type="text"]:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(155, 126, 189, 0.2);
+    outline: none;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-sizing: border-box;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 30, 84, 0.3);
+}
+
+.back-to-login {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.back-to-login a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.back-to-login a:hover {
+    color: var(--secondary-color);
+}
+
+@media (max-width: 576px) {
+    body{
+        margin: 0;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .submit-btn {
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+
+    .flash-message {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 350px) {
+    .container {
+        padding: 1rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+}
