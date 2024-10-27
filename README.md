@@ -93,12 +93,14 @@ To set up the MySQL database and tables for this project, follow these steps:
 3. Run the following SQL commands:
 
 ```sql
--- Drop existing tables if they exist to avoid conflicts
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS `password_reset_attempts`;
+DROP TABLE IF EXISTS `password_resets`;
 DROP TABLE IF EXISTS `price_history`;
 DROP TABLE IF EXISTS `user_products`;
 DROP TABLE IF EXISTS `users`;
 
--- Create `users` table
+-- Create users table
 CREATE TABLE `users` (
   `user_id` INT NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(255) NOT NULL,
@@ -106,10 +108,9 @@ CREATE TABLE `users` (
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Create `user_products` table
+-- Create user_products table
 CREATE TABLE `user_products` (
   `product_id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
@@ -117,27 +118,47 @@ CREATE TABLE `user_products` (
   `product_url` TEXT NOT NULL,
   `desired_price` DECIMAL(10,2) NOT NULL,
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `product_type` INT NOT NULL DEFAULT '0',
+  `asin` VARCHAR(16) DEFAULT NULL,
+  `last_notified` DATETIME DEFAULT NULL,
+  `last_emailed_price` DECIMAL(10,2) DEFAULT NULL,
   PRIMARY KEY (`product_id`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `user_products_ibfk_1` 
-    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) 
-    ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `user_products_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Create `price_history` table
+-- Create price_history table
 CREATE TABLE `price_history` (
   `history_id` INT NOT NULL AUTO_INCREMENT,
-  `product_id` INT NOT NULL,
   `recorded_price` DECIMAL(10,2) NOT NULL,
   `recorded_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`history_id`),
-  KEY `product_id` (`product_id`),
-  CONSTRAINT `price_history_ibfk_1` 
-    FOREIGN KEY (`product_id`) REFERENCES `user_products` (`product_id`) 
-    ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=445 
-  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `product_type` INT NOT NULL,
+  PRIMARY KEY (`history_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create password_resets table
+CREATE TABLE `password_resets` (
+  `reset_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `token` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` TIMESTAMP NOT NULL,
+  `used` TINYINT(1) DEFAULT '0',
+  `used_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`reset_id`),
+  KEY `user_id` (`user_id`),
+  KEY `idx_token` (`token`),
+  CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create password_reset_attempts table
+CREATE TABLE `password_reset_attempts` (
+  `attempt_id` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(255) NOT NULL,
+  `attempt_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`attempt_id`),
+  KEY `idx_email_time` (`email`, `attempt_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ```
 
