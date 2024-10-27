@@ -33,10 +33,10 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 
 # MySQL configurations
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 app.config['MYSQL_PORT'] = 23382
 
 mysql = MySQL(app)
@@ -84,24 +84,54 @@ def register():
             return render_template('register.html', error=session['error'], email=email)
 
         password = request.form['password']
-        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        confirm_password = request.form['confirm-password']
 
+        if not validate_password(password,confirm_password):
+            return redirect(url_for('register'))
+
+        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         # Insert the new user into the database
         cursor.execute('INSERT INTO users (email, password_hash) VALUES (%s, %s)', (email, password_hash))
         mysql.connection.commit()
         cursor.close()  # Close cursor
 
         # Send registration confirmation email
-        email_subject = "THANKS FOR REGISTERING ON PRICE TRACKER 😎‼️"
-        email_body = (
-            f"Your account has been successfully created. "
-            f"You will receive a mail when your registered products prices drop below your desired prices 😼\n\n"
-            f"Account Details:\n"
-            f"Email: {email}\n"
-            f"Password: {password}\n"
-            f"Date of Registration: {created_at}\n"
-        )
+        email_subject = "THANKS FOR REGISTERING ON PRICE HAWK 🦅 😎‼️"
+        email_body = f"""
+        Dear user,
+
+        🎉 Welcome to Price Hawk! 🦅
+
+        We're thrilled to have you join our community of smart shoppers! Your account has been successfully created, and you're now ready to start tracking prices like a pro.
+
+        📋 Your Account Details:
+        • Email: {email}
+        • Registration Date: {datetime.now().strftime('%B %d, %Y')}
+
+        🎯 What's Next?
+        1. Start adding products you want to track
+        2. Set your desired price alerts
+        3. Sit back and relax - we'll notify you when prices drop!
+
+        🔔 Important:
+        We'll send you instant notifications when any of your tracked products drop below your target price. Keep an eye on your inbox for these money-saving alerts!
+
+        💡 Quick Tip:
+        The more products you track, the better your chances of catching amazing deals!
+
+        🔒 Security Note:
+        Your password is securely stored in our system. Please keep your login credentials safe and never share them with anyone.
+
+        If you have any questions or need assistance, don't hesitate to reach out to our support team.
+
+        Happy Price Tracking! 🎯
+
+        Best regards,
+        The Price Hawk Team 🦅
+
+        ---
+        This is an automated message. Please do not reply to this email.
+        """
         send_email(email, email_subject, email_body)
 
         flash('Registration successful! Please log in.', 'success')
@@ -329,19 +359,45 @@ def unregister():
         else:
             return render_template('unregister.html',console_log = 'Unable to find your account')
 
-        deletion_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Capture the current date and time
-
         delete_user(current_user.id)  # Delete the current user's records
-        logout_user()  # Log out the user after unregistration
+        logout_user()  # Log out the user after un registration
 
         # Email content with formatted deletion date and time
-        email_subject = "Account Deletion Confirmation"
-        email_body = (
-            f"Your account has been successfully deleted.\nSad to see you leaving us 😢😢\n"
-            f"Account Details:\n"
-            f"Email: {email}\n"
-            f"Date of Deletion: {deletion_time}\n"
-        )
+        email_subject = "Farewell from Price Hawk - Account Deletion Confirmation"
+
+        email_body = f"""
+        Dear Valued User,
+
+        😢 We're Sad to See You Go
+
+        We wanted to confirm that your Price Hawk account has been successfully deleted as requested.
+
+        📋 Account Details:
+        • Email: {email}
+        • Deletion Date: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+
+        🔒 What This Means:
+        • Your account data has been permanently removed
+        • Your tracked products and price alerts have been discontinued
+        • Your personal information has been securely deleted from our system
+
+        💭 We'd Love to Know Why
+        If you'd like to share your reasons for leaving or provide feedback that could help us improve, 
+        please feel free to respond to this email.
+
+        🔄 Changed Your Mind?
+        If this was a mistake or you wish to return in the future, you're always welcome to create a new account.
+        We'll be here when you need us!
+
+        Thank you for being part of the Price Hawk community. We wish you all the best!
+
+        Best regards,
+        The Price Hawk Team 🦅
+
+        ---
+        Note: This is a final confirmation email. If you believe this was done in error, 
+        please contact our support team immediately at support@pricehawk.com (doesnt yet exist 😘)
+        """
 
         # Send account deletion confirmation email
         send_email(email, email_subject, email_body)
@@ -600,7 +656,7 @@ def validate_password(password, confirm_password):
 
 
 def send_password_reset_email(email, reset_link):
-    subject = "Password Reset Request - Price Tracker"
+    subject = "Password Reset Request - Price Hawk 🦅"
     body = f"""
             Hello,
 
@@ -613,7 +669,7 @@ def send_password_reset_email(email, reset_link):
             If you didn't request this, please ignore this email.
 
             Best regards,
-            Your Price Tracker Team
+            The Price Hawk Team! 🦅
             """
     send_email(email, subject, body)
 
@@ -631,7 +687,7 @@ def send_password_change_notification(email):
         "If you did not make this change, please contact our support team immediately.\n\n"
         "Thank you for being a valued member of our community!\n\n"
         "Best regards,\n"
-        "Your Price Tracker Team"
+        "The Price Hawk Team! 🦅"
     )
 
     send_email(email, email_subject, email_body)

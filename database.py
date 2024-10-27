@@ -17,8 +17,8 @@ def get_db_connection():
             user=app.config['MYSQL_USER'],
             password=app.config['MYSQL_PASSWORD'],
             database=app.config['MYSQL_DB'],
-            port=23382,
-            cursorclass=MySQLdb.cursors.DictCursor
+            cursorclass=MySQLdb.cursors.DictCursor,
+            port=23382
         )
         logging.debug("Database connection established successfully")
         return connection
