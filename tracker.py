@@ -96,17 +96,35 @@ def scrape_price(url):
         logging.error(f"Failed to retrieve price: {e}")
         return None
 
-def get_asin(url):#for amazon
-    # Follow the short URL redirection
-    response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Parse the product page
-        soup = BeautifulSoup(response.content, 'html.parser')
-        # Locate the ASIN in the product page's metadata
-        asin = soup.find('input', {'id': 'ASIN'})['value']
-        return asin
+def extract_asin_from_url(url):
+    """Try extracting the ASIN directly from the URL."""
+    match = re.search(r'/([A-Z0-9]{10})(?:[/?]|$)', url)
+    if match:
+        return match.group(1)
     return None
+
+def get_asin(url):
+    """Retrieve the ASIN, first checking the URL, then scraping the page."""
+    asin = extract_asin_from_url(url)
+    if asin:
+        return asin
+
+    # If not in the URL, try scraping the page
+    try:
+        response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        asin_input = soup.find('input', {'id': 'ASIN'})
+
+        if asin_input:
+            return asin_input['value']
+        else:
+            logging.warning("ASIN input field not found.")
+            return None
+
+    except Exception as e:
+        logging.error(f"Error fetching ASIN: {e}")
+        return None
+
 
 def extract_product_id(url): #for flipkart
     try:
