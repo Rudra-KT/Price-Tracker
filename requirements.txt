@@ -20,3 +20,4 @@ APScheduler~=3.10.4
 bcrypt~=4.2.0
 python-dotenv~=1.0.1
 gunicorn
+fake-useragent~=1.5.1

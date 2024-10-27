@@ -7,18 +7,23 @@ from database import get_products, get_last_price, insert_price, update_last_not
 from notifier import send_email
 import logging
 import re
+from fake_useragent import UserAgent
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+ua = UserAgent()
+
+def get_headers():
+    """Generate headers with a random User-Agent."""
+    headers = HEADERS.copy()  # Copy the base headers to avoid mutation
+    headers["User-Agent"] = ua.random if ua else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36"  # Assign a new User-Agent
+    return headers
 
 HEADERS = {
     "Accept-language": "en-GB,en;q=0.9",
     "Accept-Encoding": "gzip, deflate, br",
     "Cache-Control": "max-age=0",
     "Connection": "keep-alive",
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/114.0.5735.110 Safari/537.36"
-    ),
     "Accept-Language": "en-US,en;q=0.9"
 }
 
@@ -36,7 +41,7 @@ def scrape_price_amazon(url):
     try:
         logging.debug(f"Fetching Amazon URL: {url}")
         session = requests.Session()  # Use a session to handle redirects
-        response = session.get(url, headers=HEADERS, allow_redirects=True)
+        response = session.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Check for Amazon price element
@@ -57,7 +62,7 @@ def scrape_price_flipkart(url):
     """Scrape price from the Flipkart product page."""
     try:
         print(f"Fetching Flipkart URL: {url}")
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Check for Flipkart price element
@@ -76,21 +81,24 @@ def scrape_price_flipkart(url):
 
 def scrape_price(url):
     """Determine whether the product is from Amazon or Flipkart and scrape price."""
-    if "amazon" in url or "amzn" in url:  # Handle both full and shortened Amazon URLs
-        response = requests.get(url)
-        print("url is ",response.url)
-        return scrape_price_amazon(response.url)
-    elif "flipkart" in url:
-        response = requests.get(url)
-        final_url = response.url  # This is the full URL after redirection
-        return scrape_price_flipkart(final_url)
-    else:
-        logging.error(f"Unsupported website for URL: {url}")
+    try:
+        response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
+        if "amazon" in url or "amzn" in url:  # Handle both full and shortened Amazon URLs
+            print("url is ",response.url)
+            return scrape_price_amazon(response.url)
+        elif "flipkart" in url:
+            final_url = response.url  # This is the full URL after redirection
+            return scrape_price_flipkart(final_url)
+        else:
+            logging.error(f"Unsupported website for URL: {url}")
+            return None
+    except Exception as e:
+        logging.error(f"Failed to retrieve price: {e}")
         return None
 
 def get_asin(url):#for amazon
     # Follow the short URL redirection
-    response = requests.get(url)
+    response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
     # Check if the request was successful
     if response.status_code == 200:
         # Parse the product page
@@ -103,7 +111,7 @@ def get_asin(url):#for amazon
 def extract_product_id(url): #for flipkart
     try:
         # Follow the redirect to get the final URL
-        response = requests.get(url)
+        response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
         final_url = response.url  # This is the full URL after redirection
 
         # Now extract the product ID from the final URL
@@ -120,9 +128,13 @@ def create_price_alert_email(product_name, current_price, desired_price, product
     email_subject = f"🔥 PRICE DROP ALERT for {product_name}!"
 
     if "amazon" in product_url or "amzn" in product_url:
-        base_url = "https://www.amazon.in/dp/"
         product_asin = get_asin(product_url)
-        product_url = base_url + product_asin
+        if product_asin:
+            base_url = "https://www.amazon.in/dp/"
+            product_url = base_url + product_asin
+        else:
+            product_url=product_url
+            logging.info("Product ASIN could not be retrieved.")
     elif "flipkart" in product_url or 'fkrt.it' in product_url:
         # Split the URL at the '?' to remove query parameters
         base_url = product_url.split('?')[0]
