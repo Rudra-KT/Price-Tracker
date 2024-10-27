@@ -11,7 +11,7 @@ import time
 from notifier import send_email
 from tracker import track_prices, scrape_price, get_asin, extract_product_id, create_price_alert_email
 import logging
-from database import get_price_history, delete_user
+from database import get_price_history, delete_user, update_last_notified
 from decimal import Decimal
 
 from secrets import token_urlsafe
@@ -232,7 +232,7 @@ def add_product():
                     product_url
                 )
             )
-
+        update_last_notified(product_type, current_price)
     cursor.close()
     return redirect(url_for('dashboard'))
 
