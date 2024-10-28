@@ -14,7 +14,7 @@
 }
 
 body {
-    background-color: var(--background-color);
+    background: linear-gradient(135deg, #030f1f, var(--secondary-color));
     color: var(--text-color);
     font-weight: 300;
     line-height: 1.6;
@@ -66,8 +66,7 @@ h6, .h6 { font-size: 1rem; }
 }
 
 .navbar {
-    background-color: var(--primary-color) !important;
-    padding-top:20px;
+    padding-top:30px;
     padding-bottom:20px;
 }
 
@@ -132,7 +131,7 @@ h6, .h6 { font-size: 1rem; }
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    background-color: #fff;
+    background-color: #ffffff00;
     position: relative;
     overflow: hidden;
     max-width: 1000px;
@@ -171,7 +170,7 @@ h6, .h6 { font-size: 1rem; }
 }
 
 .card-header {
-    background-color: rgba(59, 30, 84, 0.9);
+    background-color: rgb(59 30 84 / 77%);
     color: var(--background-color);
     border-radius: 15px 15px 0 0;
     padding: 15px 20px;
@@ -182,7 +181,7 @@ h6, .h6 { font-size: 1rem; }
 .card-body {
     position: relative;
     z-index: 4;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: #ffffff00;
     padding: 20px;
 }
 
@@ -345,20 +344,20 @@ h6, .h6 { font-size: 1rem; }
 
 /* Footer styles */
 .footer {
-    background-color: var(--primary-color);
     color: var(--background-color);
-    padding: 50px 0 20px;
+    padding: 50px 0 20px 60px;
     margin-top: 50px;
 }
 
 .footer h5 {
-    color: var(--accent-color);
+    color: #fff;
     font-weight: 600;
     margin-bottom: 20px;
 }
 
 .footer p {
     font-size: 0.9rem;
+    font-family: "Source Code Pro", monospace;
 }
 
 .footer ul {
@@ -370,14 +369,21 @@ h6, .h6 { font-size: 1rem; }
 }
 
 .footer a {
-    color: var(--background-color);
+    color: #ffffffb8;
     text-decoration: none;
     transition: all 0.3s ease;
+    font-family: "Source Code Pro", monospace;
 }
 
 .footer a:hover {
     color: var(--accent-color);
     text-decoration: none;
+}
+.footer-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width:100%;
 }
 
 .social-icons {
@@ -404,23 +410,11 @@ h6, .h6 { font-size: 1rem; }
     border-top: 1px solid var(--secondary-color);
     margin: 30px 0;
 }
-.card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    background-color: #fff;
-    position: relative;
-    overflow: hidden;
+.row{
+    text-align:center;
+    width:100%;
 }
 
-.card-header {
-    background-color: rgba(59, 30, 84, 0.9);
-    color: var(--background-color);
-    border-radius: 15px 15px 0 0;
-    padding: 15px 20px;
-}
 
 
 .btn {
@@ -578,6 +572,7 @@ h6, .h6 { font-size: 1rem; }
     }
 
     .footer {
+        padding-left:0px;
         text-align: center;
     }
 

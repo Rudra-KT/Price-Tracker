@@ -11,9 +11,11 @@
     <link rel="icon" href="static/android-chrome-512x512.png">
 </head>
 <body>
+
+    <div class="gradient"></div>
     <div class="unregister-container" id="unregister-content">
         <h2><i class="fas fa-user-minus mr-2"></i>Unregister Account</h2>
-        <p>Are you sure you want to unregister? This action cannot be undone.</p>
+        <p>Are you sure you want to unregister ? This action cannot be undone.</p>
         <div class="buttons">
             <button id="unregister-btn" class="btn btn-danger">
                 <i class="fas fa-trash-alt mr-2"></i>Delete account
@@ -49,7 +51,7 @@
                     // Hide the original content and show the success message
                     document.getElementById('unregister-content').style.display = 'none';
                     document.getElementById('message-container').style.display = 'block';
-                    document.querySelector('body').style.background = 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))';
+
                 } else {
                     alert('Failed to unregister. Please try again.');
                 }

@@ -9,32 +9,65 @@
     --body-font: "Oxanium", sans-serif;
 }
 
+* {
+  transition: all 0.5s ease-out;
+}
+
 body {
     font-family: var(--body-font);
-    background-color: var(--background-color);
+    background-color: #071c39;;
     color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
+    place-content: center;
     min-height: 100vh;
     margin: 0;
     padding: 20px;
     box-sizing: border-box;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.gradient {
+  --size: 750px;
+  --speed: 7s;
+  --easing: cubic-bezier(0.8, 0.2, 0.2, 0.8);
+
+  width: var(--size);
+  height: var(--size);
+  filter: blur(calc(var(--size) / 5));
+  background-image: linear-gradient(var(--primary-color), var(--secondary-color));
+  animation: rotate var(--speed) var(--easing) alternate infinite;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  position: absolute;
+  z-index: -1;
 }
 
 .unregister-container {
-    background-color: #fff;
+    background-color: #ffffff33;
     border-radius: 15px;
     padding: 2rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 500px;
     width: 100%;
+    color: white;
 }
 
 h2 {
     font-family: var(--heading-font);
-    color: var(--primary-color);
+    color: #fff;
     margin-bottom: 1rem;
     font-size: 1.8rem;
 }
@@ -77,8 +110,9 @@ p {
 
 .buttons {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     margin-top: 1rem;
+    align-items: center;
 }
 
 .message-container {
@@ -118,7 +152,7 @@ p {
 
 @media (max-width: 767.98px) {
     body {
-        padding: 10px;
+        padding: 20px;
     }
 
     .unregister-container {
@@ -136,6 +170,7 @@ p {
     .btn {
         padding: 0.4rem 1.2rem;
         font-size: 0.8rem;
+        width: 70%;
     }
 
     .buttons {
@@ -150,9 +185,14 @@ p {
     .text-md-right {
         text-align: left !important;
     }
+
+   .gradient {
+        --size: 450px;
+    }
+
 }
 
-@media (max-width: 375px) {
+@media (max-width: 575px) {
     h2 {
         font-size: 1.3rem;
     }
@@ -164,5 +204,14 @@ p {
     .btn {
         padding: 0.3rem 1rem;
         font-size: 0.75rem;
+        width: 50%;
+    }
+
+    .gradient {
+        --size: 400px;
     }
 }
+
+
+
+
