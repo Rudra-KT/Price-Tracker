@@ -45,6 +45,11 @@ def scrape_price_amazon(url):
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
+        # Check for unavailability
+        # if is_product_unavailable(soup):
+        #     logging.error(f"Product is unavailable. {url}")
+        #     return None
+
         # Check for Amazon price element
         price_element = soup.select_one("span.a-price-whole")
         if price_element:
@@ -66,11 +71,15 @@ def scrape_price_flipkart(url):
         response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Check for Flipkart price element
-        price_element = soup.select_one("div.Nx9bqj.CxhGGd")
+        # Check for unavailability
+        # if is_product_unavailable(soup):
+        #     logging.error(f"Product is unavailable.{url}")
+        #     return None
+
+        # Check for price element
+        price_element = soup.select_one("div._30jeq3")  # Example selector for price
         if price_element:
             price = price_element.text.replace("₹", "").replace(",", "").strip()
-            print(f"Extracted raw price text : {price}")
             return float(price)
         else:
             logging.error("Error: Price element not found on Flipkart.")
@@ -80,12 +89,25 @@ def scrape_price_flipkart(url):
         return None
 
 
+def is_product_unavailable(soup):
+    """Check if the product is unavailable based on specific text."""
+    unavailable_texts = ["out of stock", "unavailable", "currently unavailable"]
+
+    # Extract all text from the soup object and join into a single string
+    page_text = soup.get_text().lower()  # Convert the entire page text to lowercase
+
+    # Check if any of the unavailable texts are present in the page text
+    for text in unavailable_texts:
+        if text in page_text:
+            return True
+
+    return False
+
 def scrape_price(url):
     """Determine whether the product is from Amazon or Flipkart and scrape price."""
     try:
         response = requests.get(url, headers=get_headers(), timeout=10, allow_redirects=True)
         if "amazon" in url or "amzn" in url:  # Handle both full and shortened Amazon URLs
-            print("url is ",response.url)
             return scrape_price_amazon(response.url)
         elif "flipkart" in url:
             final_url = response.url  # This is the full URL after redirection

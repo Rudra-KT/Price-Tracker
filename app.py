@@ -195,71 +195,75 @@ def add_product():
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Check if the product URL already exists for the current user
-    cursor.execute(
-        'SELECT * FROM user_products WHERE asin = %s AND user_id = %s',
-        (product_asin, current_user.id)
-    )
-    existing_product = cursor.fetchone()
-
-    if existing_product:
-        flash('You have already added this product to your list.', 'info')
-        cursor.close()
-        return redirect(url_for('dashboard'))
-
-    # Check if product exists in database for other users
-    cursor.execute('SELECT * FROM user_products WHERE asin = %s', (product_asin,))
-    existing_product = cursor.fetchone()
-
-    if existing_product:
-        product_type = existing_product['product_type']
-    else:
-        # Generate a new product_type value
-        cursor.execute('SELECT COALESCE(MAX(product_type), 0) + 1 AS new_product_type FROM user_products')
-        product_type = cursor.fetchone()['new_product_type']
-
-    # Insert the product into user_products table
-    cursor.execute(
-        '''
-        INSERT INTO user_products 
-        (user_id, product_name, product_url, desired_price, product_type, asin) 
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ''',
-        (current_user.id, product_name, product_url, desired_price, product_type, product_asin)
-    )
-    mysql.connection.commit()
-
-    # Scrape the current price
-    current_price = scrape_price(product_url)
-
-    if current_price is None:
-        flash('Unable to retrieve the product price. Please try again later.', 'error')
-        cursor.close()
-        return redirect(url_for('dashboard'))
-
-    # Save the price history
-    cursor.execute(
-        'INSERT INTO price_history (recorded_price, product_type) VALUES (%s, %s)',
-        (current_price, product_type)
-    )
-    mysql.connection.commit()
-
-    # Send price alert email if the current price is below the desired price
-    if current_price < desired_price:
-        cursor.execute('SELECT email FROM users WHERE user_id = %s', (current_user.id,))
-        user_email = cursor.fetchone()['email']
-
-        send_email(
-            user_email,
-            *create_price_alert_email(product_name, current_price, desired_price, product_url)
+    if product_asin :
+        # Check if the product URL already exists for the current user
+        cursor.execute(
+            'SELECT * FROM user_products WHERE (asin = %s OR product_name = %s) AND user_id = %s',
+            (product_asin, product_name, current_user.id)
         )
-        update_last_notified(product_type, current_price)
+        existing_product = cursor.fetchone()
 
-    cursor.close()
-    flash('Product added successfully!', 'success')
-    return redirect(url_for('dashboard'))
+        if existing_product:
+            logging.info(f"Product already exists: User ID : {current_user.id} --> {product_name} ({product_url})")
+            flash('You have already added this product to your list.', 'info')
+            cursor.close()
+            return redirect(url_for('dashboard'))
 
+        # Check if product exists in database for other users
+        cursor.execute('SELECT * FROM user_products WHERE asin = %s', (product_asin,))
+        existing_product = cursor.fetchone()
 
+        if existing_product:
+            product_type = existing_product['product_type']
+        else:
+            # Generate a new product_type value
+            cursor.execute('SELECT COALESCE(MAX(product_type), 0) + 1 AS new_product_type FROM user_products')
+            product_type = cursor.fetchone()['new_product_type']
+
+        # Insert the product into user_products table
+        cursor.execute(
+            '''
+            INSERT INTO user_products 
+            (user_id, product_name, product_url, desired_price, product_type, asin) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ''',
+            (current_user.id, product_name, product_url, desired_price, product_type, product_asin)
+        )
+        mysql.connection.commit()
+
+        # Scrape the current price
+        current_price = scrape_price(product_url)
+
+        if current_price is None:
+            flash('Unable to retrieve the product price right now , maybe because the product is unavailable currently. We will inform you when its price drops below your desired price 😊', 'info')
+            cursor.close()
+            return redirect(url_for('dashboard'))
+
+        # Save the price history
+        cursor.execute(
+            'INSERT INTO price_history (recorded_price, product_type) VALUES (%s, %s)',
+            (current_price, product_type)
+        )
+        mysql.connection.commit()
+
+        # Send price alert email if the current price is below the desired price
+        if current_price < desired_price:
+            cursor.execute('SELECT email FROM users WHERE user_id = %s', (current_user.id,))
+            user_email = cursor.fetchone()['email']
+
+            send_email(
+                user_email,
+                *create_price_alert_email(product_name, current_price, desired_price, product_url)
+            )
+            update_last_notified(product_type, current_price)
+
+        cursor.close()
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('dashboard'))
+
+    else: #if product_asin is none or not found on website it means scraping failed
+        flash('Unable to scrape the product page right now , please try again later', 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/unregister_product/<int:product_id>', methods=['POST'])
 @login_required
