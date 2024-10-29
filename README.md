@@ -164,11 +164,11 @@ CREATE TABLE `password_reset_attempts` (
 
 ## 📬 Notifications Setup
 ```
-Add your email credentials in credentials.json:
-{
-  "email": "your-email@example.com",
-  "password": "your-email-password"
-}
+Add your email credentials in .env :
+EMAIL = your-email
+PASSWORD = your-password
+
+- **Also setup the database connection credentials in .env like host dbname password ...check app.py for the names of exact environment variables .**
 ```
 - **Ensure that less secure apps are enabled for the email provider (e.g., Gmail)** otherwise you wont be able to send mails to users .
 
