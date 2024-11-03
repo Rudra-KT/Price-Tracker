@@ -1,19 +1,12 @@
-beautifulsoup4 == 4.9.1
-
-helium == 3.0.5
-
-requests == 2.32.0
-
-validators == 0.18.1
-
-html5lib == 1.1
-flask_mysqldb == 2.0.0
-mysqlclient == 2.2.5
-mysql-connector-python~=9.1.0
+beautifulsoup4==4.9.1
+Werkzeug==3.0.4
+helium==3.0.5
+requests==2.32.0
+validators==0.18.1
+html5lib==1.1
 Flask~=3.0.3
 schedule~=1.2.2
 matplotlib~=3.9.2
-mysqlclient~=2.2.5
 Flask-Bcrypt~=1.0.1
 Flask-Login~=0.6.3
 APScheduler~=3.10.4
@@ -21,3 +14,4 @@ bcrypt~=4.2.0
 python-dotenv~=1.0.1
 gunicorn
 fake-useragent~=1.5.1
+PyMySQL==1.1.1

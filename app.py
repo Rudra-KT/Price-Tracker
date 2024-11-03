@@ -1,17 +1,16 @@
 import os
-
+import pymysql
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
-from flask_mysqldb import MySQL
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-import MySQLdb.cursors
 import threading
 import time
+from pymysql.cursors import DictCursor
 
 from notifier import send_email
 from tracker import track_prices, scrape_price, get_asin, extract_product_id, create_price_alert_email
 import logging
-from database import get_price_history, delete_user, update_last_notified
+from database import get_price_history, delete_user, update_last_notified, get_db_connection
 from decimal import Decimal
 
 from secrets import token_urlsafe
@@ -31,19 +30,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
-
 # MySQL configurations
 app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
-app.config['MYSQL_PORT'] = 23382
+# app.config['MYSQL_PORT'] = 23382
 
-mysql = MySQL(app)
+
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
 
 # User class for Flask-Login
 class User(UserMixin):
@@ -52,7 +49,7 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor = get_db_connection().cursor(DictCursor)
     cursor.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
     user = cursor.fetchone()
     if user:
@@ -73,7 +70,7 @@ def register():
         email = request.form['email']
 
         # Check if the email already exists
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         existing_user = cursor.fetchone()
 
@@ -92,7 +89,7 @@ def register():
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         # Insert the new user into the database
         cursor.execute('INSERT INTO users (email, password_hash) VALUES (%s, %s)', (email, password_hash))
-        mysql.connection.commit()
+        get_db_connection().commit()
         cursor.close()  # Close cursor
 
         # Send registration confirmation email
@@ -147,7 +144,7 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
 
@@ -172,7 +169,7 @@ def shorten_url(url):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor = get_db_connection().cursor(DictCursor)
     cursor.execute('SELECT * FROM user_products WHERE user_id = %s', (current_user.id,))
     products = cursor.fetchall()
     for product in products:
@@ -193,7 +190,7 @@ def add_product():
         flash('Only Amazon or Flipkart links supported atm', 'error')
         return redirect(url_for('dashboard'))
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor = get_db_connection().cursor(DictCursor)
 
     if product_asin :
         # Check if the product URL already exists for the current user
@@ -229,7 +226,7 @@ def add_product():
             ''',
             (current_user.id, product_name, product_url, desired_price, product_type, product_asin)
         )
-        mysql.connection.commit()
+        get_db_connection().commit()
 
         # Scrape the current price
         current_price = scrape_price(product_url)
@@ -244,7 +241,7 @@ def add_product():
             'INSERT INTO price_history (recorded_price, product_type) VALUES (%s, %s)',
             (current_price, product_type)
         )
-        mysql.connection.commit()
+        get_db_connection().commit()
 
         # Send price alert email if the current price is below the desired price
         if current_price < desired_price:
@@ -268,17 +265,17 @@ def add_product():
 @app.route('/unregister_product/<int:product_id>', methods=['POST'])
 @login_required
 def unregister_product(product_id):
-    cursor = mysql.connection.cursor()
+    cursor = get_db_connection().cursor()
     cursor.execute('DELETE FROM user_products WHERE product_id = %s AND user_id = %s',
                    (product_id, current_user.id))
-    mysql.connection.commit()
+    get_db_connection().commit()
     return redirect(url_for('dashboard'))
 
 def update_desired_price(product_id, new_price):
     """Update the desired price for a given product."""
-    cursor = mysql.connection.cursor()
+    cursor = get_db_connection().cursor()
     cursor.execute("UPDATE user_products SET desired_price = %s WHERE product_id = %s", (new_price, product_id))
-    mysql.connection.commit()
+    get_db_connection().commit()
 
 @app.route('/update_price/<int:product_id>', methods=['POST'])
 @login_required
@@ -345,7 +342,7 @@ def view_price_history():
 @login_required
 def unregister():
     if request.method == 'POST':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
         cursor.execute(
             'SELECT email FROM users WHERE user_id = %s',
             (current_user.id,)
@@ -419,7 +416,7 @@ def change_password():
             return redirect(url_for('login'))  # Redirect to log in if not logged in
 
         # Check the current password
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
         cursor.execute('SELECT password_hash FROM users WHERE email = %s ', (user_email,))
         user = cursor.fetchone()
 
@@ -430,7 +427,7 @@ def change_password():
                 # Hash the new password and update it in the database
                 new_password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
                 cursor.execute('UPDATE users SET password_hash = %s WHERE email = %s', (new_password_hash, user_email))
-                mysql.connection.commit()
+                get_db_connection().commit()
 
                 # Send password change notification email
                 send_password_change_notification(user_email)
@@ -459,7 +456,7 @@ def forgot_password():
             flash('Too many requests. Please try again later.', 'error')
             return render_template('forgot_password.html')
 
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
 
         try:
             cursor.execute('SELECT user_id, email FROM users WHERE email = %s', (email,))
@@ -487,7 +484,7 @@ def forgot_password():
                     VALUES (%s, %s, %s)
                 ''', (user['user_id'], reset_token, expiry))
 
-            mysql.connection.commit()
+            get_db_connection().commit()
 
             # Generate reset link
             reset_link = url_for('reset_password', token=reset_token, _external=True)
@@ -499,7 +496,7 @@ def forgot_password():
             return render_template('forgot_password.html')
 
         except Exception as e:
-            mysql.connection.rollback()
+            get_db_connection().rollback()
             app.logger.error(f"Password reset error: {str(e)}")
             flash('An error occurred. Please try again later.', 'error')
             return render_template('forgot_password.html')
@@ -516,7 +513,7 @@ def reset_password(token):
         flash('Invalid reset link.', 'error')
         return redirect(url_for('login'))
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor = get_db_connection().cursor(DictCursor)
 
     try:
         # Verify token and check expiry
@@ -559,7 +556,7 @@ def reset_password(token):
                             WHERE token = %s
                         ''', (datetime.now(timezone.utc), token))
 
-                mysql.connection.commit()
+                get_db_connection().commit()
 
                 # Send notification email
                 send_password_change_notification(reset_info['email'])
@@ -572,7 +569,7 @@ def reset_password(token):
         return render_template('reset_password.html', token=token)
 
     except Exception as e:
-        mysql.connection.rollback()
+        get_db_connection().rollback()
         app.logger.error(f"Password reset error: {str(e)}")
         flash('An error occurred. Please try again later.', 'error')
         return redirect(url_for('forgot_password'))
@@ -584,7 +581,7 @@ def reset_password(token):
 def is_rate_limited(email):
     cursor = None
     try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = get_db_connection().cursor(DictCursor)
 
         # Clean up old attempts (older than 1 hour)
         cursor.execute('''
@@ -612,7 +609,7 @@ def is_rate_limited(email):
             VALUES (%s, NOW())
         ''', (email,))
 
-        mysql.connection.commit()
+        get_db_connection().commit()
         return False
 
     except Exception as e:
